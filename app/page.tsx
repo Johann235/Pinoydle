@@ -23,7 +23,7 @@ function App() {
   const [values, setValues] = useState(() => {return [...Array(numGuesses)].map(e => Array(wordLength).fill(''))});
   const [message, setMessage] = useState( () => {return ""});
   
-
+  let guesses = [...Array(numGuesses).keys()].map(e => `guess_${e+1}`);
   let rows = [...Array(numGuesses).keys()];
   const [submitted, setSubmitted] =  useState(() => {return [...Array(numGuesses).fill(false)]});
 
@@ -121,31 +121,30 @@ function App() {
 
   //Persisting guesses
   useEffect(() => {
-    console.log("This shi running");
-    let guesses = localStorage.getItem("guesses");
+    let i = 0;
+    let guess = localStorage.getItem("guess_1");
+    console.log("hi", guess);
     let rowNum = localStorage.getItem("rowNum");
     let isGameOver = localStorage.getItem("gameOver");
     gameOver? setGameOver(Boolean(isGameOver)) : null;
     rowNum? setRowNumber(Number(rowNum)): null;
-    if (guesses){
-      let curGuesses = guesses?.split(",");
-      let newValues: string[][] = [];
-      let newSubmitted: boolean[] = [];
-      for (let i = 0; i < curGuesses.length; i ++){
-        newValues.push(curGuesses[i].split(""))
-        newSubmitted.push(true);
-      };
-      for (let i = curGuesses.length; i < numGuesses; i ++){
-        newValues.push(Array(5).fill(""));
-        newSubmitted.push(false);
-      };
-      localStorage.setItem("guesses", "");
-      setValues(newValues);
-      setSubmitted(newSubmitted);
-    };
-    
-  },[]);
-
+    let newValues: string[][] = [];
+    let newSubmitted: boolean[] = [];
+    while(guess){
+      newValues.push(guess.split(""));
+      newSubmitted.push(true);
+      i += 1;
+      guess = localStorage.getItem(`guess_${i+1}`);
+    }
+    while(i <= wordLength){
+      newValues.push([...Array(5).fill("")]);
+      newSubmitted.push(false);
+      i += 1;
+    }
+    setValues(newValues);
+    setSubmitted(newSubmitted);
+    console.log(newValues, newSubmitted);
+    },[]);
   
   //Get word
   useEffect(() => {
@@ -185,7 +184,7 @@ function App() {
       { 
         rows.map( (elem) =>
           <Row guessArray={values[elem]} wordLength={wordLength} submitted={submitted[elem]} setGameOver={setGameOver} 
-               secretWord={secretWord} key={elem} letterStates={letterStates} setLetterStates={setLetterStates}/>
+               secretWord={secretWord} key={elem} letterStates={letterStates} setLetterStates={setLetterStates} rowNum={elem}/>
         )
       }
       
