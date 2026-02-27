@@ -1,0 +1,11 @@
+.Keyboard{
+    margin-top: 15px;
+    width: 100%;
+    height: 300px;
+}
+
+.Keyboard .KeyboardRow{
+    display: flex;
+    justify-content: center;
+    margin-bottom: 5px;
+}

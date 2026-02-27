@@ -1,65 +1,203 @@
-import Image from "next/image";
+"use client";
+import { useState } from 'react';
+import { useEffect } from 'react';
+import Row from '../components/Row';
+import Keyboard from '../components/Keyboard';
+import { WORDS } from '../components/WordsSet';
+import './page.css';
 
-export default function Home() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+export enum Guess_Value{
+    Green,
+    Yellow,
+    Grey,
+    Black
 }
+
+function App() {
+  const numGuesses = 6;
+  const wordLength = 5;
+
+  const [gameOver, setGameOver] = useState(false);
+  const [rowNumber, setRowNumber] = useState(0);
+  const [squareNumber, setSquareNumber] = useState(0);
+  const [values, setValues] = useState(() => {return [...Array(numGuesses)].map(e => Array(wordLength).fill(''))});
+  const [message, setMessage] = useState( () => {return ""});
+  
+
+  let rows = [...Array(numGuesses).keys()];
+  const [submitted, setSubmitted] =  useState(() => {return [...Array(numGuesses).fill(false)]});
+
+
+  //const secretWord = "steel";
+  const [secretWord, setSecretWord] = useState("");
+
+  //Lazy init dictionary for the states of all letters
+  const [letterStates, setLetterStates] = useState(() => {
+    let alphabet = [...Array(26).keys()].map(e=>String.fromCharCode(e+65));
+    let initSet: {[key:string]: Guess_Value} = {};
+    for (let i = 0; i < alphabet.length; i++){
+      initSet[alphabet[i]] = Guess_Value.Black;
+    }
+    return initSet;
+  }); 
+  
+  function keyDownHandler(e: globalThis.KeyboardEvent) {
+    if(gameOver){
+      return;
+    }
+    //Try to submit
+    if(e.key == "Enter"){
+      if (squareNumber < wordLength){
+        setMessage("Not enough letters");
+        return;
+      }
+      else if(!(WORDS.has(values[rowNumber].join("")))){
+        setMessage("Word not in word list");
+        return
+      }
+      else{
+        let newSubmitted = submitted.slice();
+        newSubmitted[rowNumber] = true;
+        setSubmitted(newSubmitted);
+        setRowNumber(rowNumber => rowNumber + 1);
+        setSquareNumber(0);
+        setMessage("");
+        localStorage.setItem("rowNum", `${rowNumber + 1}`);
+        if (rowNumber == numGuesses - 1){
+          setMessage("Game over </3");
+          localStorage.setItem("gameOver", "true")
+          setGameOver(true);
+        }
+        return;
+      }
+    }
+
+    //Delete
+    else if( (e.key == "Backspace") && (squareNumber > 0)){
+      let newValues = values.slice();
+      let newRow = values[rowNumber].slice();
+      newRow[squareNumber-1] = "";
+      newValues[rowNumber] = newRow;
+      setValues(newValues);
+      setSquareNumber(squareNumber => squareNumber - 1);
+      return;
+    }
+
+    //Check for invalid letter
+    else if( !(/^[a-z]$/i.test(e.key))){
+      return;
+    }
+
+    //Insert
+    else if(squareNumber < wordLength){
+      let newValues = values.slice();
+      let newRow = values[rowNumber].slice();
+      newRow[squareNumber] = e.key.toUpperCase();
+      newValues[rowNumber] = newRow;
+      setValues(newValues);
+      setSquareNumber(squareNumber => squareNumber + 1);
+    }
+  }
+  
+  //Change messages
+  useEffect(() => {
+    const element: HTMLElement|null = document.getElementById("Message");
+
+    function removeStyle(element: HTMLElement){
+      element.className = "msg_hidden";
+      setMessage("");
+    };
+
+    function changeStyle(element: HTMLElement){
+    element.style.width = `${message.length + 2}pc`;
+    element.className = "msg_show"
+    setTimeout(removeStyle,3000,element);
+    };
+
+    if (message != ""){
+    element ? changeStyle(element): null;
+    };
+  }, [message]);
+
+  //Persisting guesses
+  useEffect(() => {
+    console.log("This shi running");
+    let guesses = localStorage.getItem("guesses");
+    let rowNum = localStorage.getItem("rowNum");
+    let isGameOver = localStorage.getItem("gameOver");
+    gameOver? setGameOver(Boolean(isGameOver)) : null;
+    rowNum? setRowNumber(Number(rowNum)): null;
+    if (guesses){
+      let curGuesses = guesses?.split(",");
+      let newValues: string[][] = [];
+      let newSubmitted: boolean[] = [];
+      for (let i = 0; i < curGuesses.length; i ++){
+        newValues.push(curGuesses[i].split(""))
+        newSubmitted.push(true);
+      };
+      for (let i = curGuesses.length; i < numGuesses; i ++){
+        newValues.push(Array(5).fill(""));
+        newSubmitted.push(false);
+      };
+      localStorage.setItem("guesses", "");
+      setValues(newValues);
+      setSubmitted(newSubmitted);
+    };
+    
+  },[]);
+
+  
+  //Get word
+  useEffect(() => {
+    const getData = async () => {
+      try{
+      const res = await fetch("api/word/");
+      const  data = await res.json();
+      setSecretWord(data);
+      console.log(data);
+      return data;
+    }
+      catch (error){
+        console.log(error);
+        return;
+      }
+    }
+    getData();
+  }
+  , []);
+
+  //For keyboard input
+  useEffect(() => {
+    document.addEventListener("keydown", keyDownHandler);
+
+    return () => {
+      document.removeEventListener("keydown", keyDownHandler);
+    }
+  }, [squareNumber, rowNumber, values,gameOver]);
+
+  if (secretWord === ""){
+    return <>Loading</>;
+  }
+
+  return (
+  <>
+    <div className="Game"> 
+      { 
+        rows.map( (elem) =>
+          <Row guessArray={values[elem]} wordLength={wordLength} submitted={submitted[elem]} setGameOver={setGameOver} 
+               secretWord={secretWord} key={elem} letterStates={letterStates} setLetterStates={setLetterStates}/>
+        )
+      }
+      
+    </div>
+
+    <div className='MessageBox'>
+      <input className="msg_hidden" id="Message" value={message} disabled /> 
+    </div>
+    <Keyboard letterStates={letterStates}></Keyboard>
+  </>
+  
+  )
+}
+
+export default App

@@ -1,0 +1,59 @@
+.Square input{
+    width: 65px;
+    height: 65px;
+    margin-right: 5px;
+    border: var(--bg-alt) 5px solid;
+    background-color: var(--bg);
+    animation-timing-function: ease-in-out;
+}
+
+@keyframes spin{
+    0% {
+    transform: scaleX(1);
+    }
+    50% {
+    transform: scaleX(0);
+    }
+    100% {
+    transform: scaleX(1);
+    }
+    }
+
+@keyframes green{
+    50%{
+    background-color: var(--bg);
+    }
+    100%{
+    background-color: var(--green)
+    }
+}
+
+@keyframes grey{
+    50%{
+    background-color: var(--bg);
+    }
+    100%{
+    background-color: var(--grey)
+    }
+}
+
+@keyframes yellow{
+    50%{
+    background-color: var(--bg);
+    }
+    100%{
+    background-color: var(--yellow)
+    }
+}
+
+input:disabled{
+    opacity: 1;
+    color: white;
+    text-align: center;
+    font-size: 30px;
+}
+
+input:focus{
+    outline: none;
+}
+

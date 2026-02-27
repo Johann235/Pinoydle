@@ -1,0 +1,7 @@
+.Row{
+    margin: 0 auto; 
+    margin-top: 5px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
