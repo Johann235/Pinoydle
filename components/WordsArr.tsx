@@ -1,4 +1,4 @@
-export const WORDS = [
+export const WORDS_ARR = [
 "LABAG",
 "LABAK",
 "EBANO",

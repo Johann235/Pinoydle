@@ -1,5 +1,5 @@
 import './Square.css';
-import {Guess_Value} from '../app/page'
+import { Guess_Value } from '@/components/lib/types';
 type SquareProps = {
     value: string,
     submitted: boolean,

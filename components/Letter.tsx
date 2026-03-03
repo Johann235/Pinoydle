@@ -1,4 +1,4 @@
-import {Guess_Value} from '../app/page'
+import { Guess_Value } from '@/components/lib/types';
 import './Letter.css';
 
 type LetterProps = {
